@@ -1,7 +1,7 @@
 import sys
-from PyQt5.QtWidgets import QApplication, QMainWindow, QStatusBar, QLineEdit, QPushButton, QVBoxLayout, QWidget, QHBoxLayout
+from PyQt5.QtWidgets import QApplication, QMainWindow, QStatusBar, QLineEdit, QPushButton, QVBoxLayout, QWidget, QHBoxLayout, QLabel
 from PyQt5.QtWebEngineWidgets import QWebEngineView
-from PyQt5.QtCore import QUrl, Qt, QEvent
+from PyQt5.QtCore import QUrl, QEvent, QRect, QPropertyAnimation, Qt
 
 class OTETBrowser(QMainWindow):
     def __init__(self):
@@ -10,12 +10,19 @@ class OTETBrowser(QMainWindow):
         self.init_ui()
 
     def init_ui(self):
+        # ...
+
         # Widgets erstellen
         self.web_view = QWebEngineView()
         self.address_bar = QLineEdit()
         self.search_button = QPushButton('Suchen')
         self.back_button = QPushButton('◄')
         self.forward_button = QPushButton('►')
+        self.overlay_label = QLabel(self)
+
+        # Setzen Sie den Stil für den Suchen-Button
+        self.search_button.setObjectName('searchButton')
+        self.search_button.setCursor(Qt.PointingHandCursor)
 
         # Layout erstellen
         button_layout = QHBoxLayout()
@@ -50,43 +57,30 @@ class OTETBrowser(QMainWindow):
         self.setWindowTitle('OTET Browser')
         self.setGeometry(100, 100, 800, 600)
 
-        # Stylesheet anpassen (Opera-ähnliches Design)
-        self.setStyleSheet('''
-            QMainWindow {
-                background-color: #1C1C1C;
-                color: #FFFFFF;
-            }
-            QLineEdit {
-                background-color: #2E2E2E;
-                color: #FFFFFF;
-                border: 1px solid #5C5C5C;
-                padding: 5px;
-                border-radius: 10px;  /* Abgerundete Ecken */
-            }
-            QPushButton {
-                background-color: #3F3F3F;
-                color: #FFFFFF;
-                border: 1px solid #5C5C5C;
-                padding: 5px;
-            }
-            QPushButton:hover {
-                background-color: #4F4F4F;
-            }
-            QPushButton:pressed {
-                background-color: #2F2F2F;
-            }
-            QWebEngineView {
-                border: 1px solid #5C5C5C;
-            }
-        ''')
-
         # DuckDuckGo direkt laden
         self.load_duckduckgo()
+
+        # Animation für den Suchen-Button
+        self.button_animation = QPropertyAnimation(self.overlay_label, b'geometry')
+        self.button_animation.setDuration(200)
+        self.button_animation.setStartValue(QRect(0, 0, 0, 0))
+        self.button_animation.setEndValue(self.overlay_label.geometry())
+
+        # Startposition für die Overlay-Grafik festlegen
+        self.overlay_label.setGeometry(self.search_button.geometry())
+        self.overlay_label.setStyleSheet('''
+            background-color: #111;
+            border-radius: 8px;
+        ''')
 
     def search_duckduckgo(self):
         search_query = self.address_bar.text()
         duckduckgo_url = "https://duckduckgo.com/?q=" + search_query
         self.web_view.setUrl(QUrl(duckduckgo_url))
+        self.start_button_animation()
+
+    def start_button_animation(self):
+        self.button_animation.start()
 
     def load_duckduckgo(self):
         duckduckgo_url = "https://duckduckgo.com/"
